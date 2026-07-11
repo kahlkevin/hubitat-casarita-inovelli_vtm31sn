@@ -75,7 +75,9 @@ The workspace includes tasks for common local workflows:
 
 There are two recommended installation paths:
 
- 1. Install via Hubitat Package Manager (TBD: package name/search instruction)
+ 1. Install via Hubitat Package Manager
+    - Package name: `Inovelli Dimmer White Series VTM31-SN by Kevin Kahl`
+    - Search by keyword or find by tag under `Matter`, `Lights & Switches`, or `Energy Monitoring`
  2. Use the generated bundle package for the flavor you want from `dist/`:
     - Open the Bundles tab (enable Show advanced/developer options in the Settings page if that tab isn't visible).
     - Click `Import .ZIP`, then `+ Choose` to select your preferred bundle package.
