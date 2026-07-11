@@ -1,0 +1,49 @@
+###
+##  SPDX-FileCopyrightText: 2026 Kevin Kahl
+##  SPDX-License-Identifier: Apache-2.0
+##
+##  Copyright 2026 Kevin Kahl
+##
+##  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+##  in compliance with the License. You may obtain a copy of the License at:
+##
+##      http://www.apache.org/licenses/LICENSE-2.0
+##
+##  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+##  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+##  for the specific language governing permissions and limitations under the License.
+##
+
+# Pick one path for now; later this can be generated or wrapped.
+# gpp = tools/gpp/win-x64/gpp.exe
+gpp = gpp
+
+# Common GPP setup.
+gpp_common = -z --nostdinc
+
+# Custom syntax/prefix options go here.
+#   -U <macro start seq> <macro end seq (no args)> <arg start seq> <arg sep> <arg end seq> <balance stack chars> <balance unstack chars> <arg-by-number string> <quote/escape char>
+#   -M <macro start seq> <macro end seq (no args)> <arg start seq> <arg sep> <arg end seq> <balance stack chars> <balance unstack chars>
+gpp_syntax_groovy   = -U "@" "" "(" "\w,\w" ")" "({[" "]})" "#" "" -M "\n//\w#"   "\n" " " " " "\n" "" ""
+gpp_syntax_stage    = -U "@" "" "(" "\w,\w" ")" "({[" "]})" "#" "" -M "\n////\w#" "\n" " " " " "\n" "" ""
+gpp_syntax_template = -U "@" "" "(" "\w,\w" ")" "({[" "]})" "#" "" -M "\n#"       "\n" " " " " "\n" "" ""
+
+# User macros (define gpp_macros).
+# Be sure to include these before including this file
+# ex. gpp_macros = -DCONCAT="concat #1 #2"
+
+# Feature switches (define gpp_defs).
+# Be sure to include these before including this file
+# ex. gpp_defs = -DDEBUG
+
+rule gpp_groovy
+  command = $gpp -I $incdir $gpp_syntax_groovy $gpp_common $gpp_common_macros $gpp_version_macro $gpp_defs $gpp_macros -o $out $in
+  description = GPP $in -> $out
+
+rule gpp_stage
+  command = $gpp -I $gendir $gpp_stage_marker $gpp_syntax_stage $gpp_common $gpp_common_macros $gpp_version_macro $gpp_defs $gpp_macros -o $out $in
+  description = STAGE $in -> $out
+
+rule gpp_template
+  command = $gpp -I $assetdir $gpp_syntax_template $gpp_common $gpp_common_macros $gpp_version_macro $gpp_defs $gpp_macros -o $out $in
+  description = GPP $in -> $out

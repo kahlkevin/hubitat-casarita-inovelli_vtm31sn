@@ -1,0 +1,44 @@
+###
+##  SPDX-FileCopyrightText: 2026 Kevin Kahl
+##  SPDX-License-Identifier: Apache-2.0
+##
+##  Copyright 2026 Kevin Kahl
+##
+##  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+##  in compliance with the License. You may obtain a copy of the License at:
+##
+##      http://www.apache.org/licenses/LICENSE-2.0
+##
+##  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+##  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+##  for the specific language governing permissions and limitations under the License.
+##
+
+prjroot = ../..
+builddir = ../out
+
+rule help
+    command = ninja -h
+    description = HELP
+
+build nothingtodo: help
+default nothingtodo
+
+rule genstages
+    command = python3 ../genstages/genstages.py --source-path $prjroot --quiet $in $out
+    description = GENSTAGES $in -> $out
+
+rule ninja
+    command = ninja -f $in
+    description = NINJA $in
+
+build $builddir/sources-stage1.ninja $builddir/sources-stage2.ninja: genstages $prjroot/sources.toml
+build sources: phony $builddir/sources-stage1.ninja $builddir/sources-stage2.ninja $builddir/version.ninja
+
+build ninja-dev: ninja build-dev.ninja | sources
+build ninja-pre: ninja build-pre.ninja | sources
+build ninja-prod: ninja build-prod.ninja | sources
+
+build dev: phony sources ninja-dev
+build pre: phony sources ninja-pre
+build prod: phony sources ninja-prod

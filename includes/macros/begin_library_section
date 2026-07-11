@@ -1,0 +1,43 @@
+// #if 0
+/**
+ *  SPDX-FileCopyrightText: 2026 Kevin Kahl
+ *  SPDX-License-Identifier: Apache-2.0
+ *
+ *  Copyright 2026 Kevin Kahl
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ */
+/*
+    gpp_syntax_groovy =
+        -U
+            "@"         // macro start seq
+            ""          // macro end seq (no args)
+            "("         // arg start seq
+            ","         // arg sep
+            ")"         // arg end seq
+            "("         // balance stack chars
+            ")"         // balance unstack chars
+            "#"         // arg-by-number string
+            ""          // quote char
+        -M
+            "\n//\w#"   // macro start seq
+            "\n"        // macro end seq (no args)
+            " "         // arg start seq
+            " "         // arg sep
+            "\n"        // arg end seq
+            ""          // balance stack chars
+            ""          // balance unstack chars
+    -DINCLIB="#include @NAMESPACE.#1"                   // Modular
+    -DINCLIB="#include \"${lib_prefix}#1.groovy\""      // Monolith
+*/
+// #endif
+// #include "macros/define_lf"
+// #defeval FIRST_INCLIB @INCLIB(#1)
+// #defeval INCLIB @LF@INCLIB(#1)

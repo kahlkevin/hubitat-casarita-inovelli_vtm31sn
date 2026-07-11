@@ -1,0 +1,59 @@
+###
+##  SPDX-FileCopyrightText: 2026 Kevin Kahl
+##  SPDX-License-Identifier: Apache-2.0
+##
+##  Copyright 2026 Kevin Kahl
+##
+##  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+##  in compliance with the License. You may obtain a copy of the License at:
+##
+##      http://www.apache.org/licenses/LICENSE-2.0
+##
+##  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+##  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+##  for the specific language governing permissions and limitations under the License.
+##
+
+# Common variable bindings
+# Be sure to set flavor before including this file
+
+srcroot = ../..
+assetdir = $srcroot/assets
+drvdir = $srcroot/drivers
+incdir = $srcroot/includes
+libdir = $srcroot/libraries
+
+builddir = $srcroot/build/out
+stagedir = $builddir/$flavor
+gendir = $stagedir
+
+macrosincdir = $incdir/macros
+
+lib_prefix = final-lib-
+driver_prefix = final-driver-
+
+gpp_stage_marker = --includemarker "// Line %, File % (%)"
+
+gpp_common_macros = $
+    -D${buildtype}_BUILD $
+    -DAT=@#1 $
+    -DBUTTON_EP_MAP=[3:1,4:2,5:3] $
+    -DENABLE_DEBUG_COMMON_TRIGGERS $
+    -DENABLE_DEBUG_LIFECYCLE $
+    -DENABLE_DEBUG_MATTER_SEND=log $
+    -DENABLE_FOLDER_SUPPORT $
+    -DENABLE_PREF_SECTION_TITLE_COLOR $
+    -DENDPOINT_ELECINFO=0x07 $
+    -DENDPOINT_LOAD=0x01 $
+    -DENDPOINT_LED=0x06 $
+    -DENDPOINT_ROOT=0x00 $
+    -DFLAVOR=$flavor $
+    -DMDNAME="${nameprefix}#1" $
+    -DNAMEOF="\"#1\"" $
+    -DNAMESPACE=$namespace $
+    -DPOUND=##1 $
+    -DSKIP_OFF_LIGHT_EFFECT $
+    -DSUBSCRIPTION_MAX_INTERVAL=60 $
+    -DSUBSCRIPTION_MIN_INTERVAL=1 $
+
+# eof

@@ -1,0 +1,47 @@
+###
+##  SPDX-FileCopyrightText: 2026 Kevin Kahl
+##  SPDX-License-Identifier: Apache-2.0
+##
+##  Copyright 2026 Kevin Kahl
+##
+##  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+##  in compliance with the License. You may obtain a copy of the License at:
+##
+##      http://www.apache.org/licenses/LICENSE-2.0
+##
+##  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+##  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+##  for the specific language governing permissions and limitations under the License.
+##
+
+# User macros for dev flavor.
+gpp_macros = $
+    -DINCLIB="#include @NAMESPACE.#1"
+
+# Unset feature switches
+gpp_not_currently_set = $
+    -DDEFMOVERATE_SUPPORT $
+    -DENABLE_DEBUG_DISPATCH $
+    -DENABLE_DEBUG_EVENTS $
+    -DENABLE_DEBUG_HEOBJS $
+    -DENABLE_DEBUG_MODESELECT $
+    -DENABLE_DEBUG_PREFS $
+    -DENABLE_DEBUG_SUBS $
+    -DENABLE_PARSER_NUM_HISTO $
+    -DENABLE_PARSER_TYPE_RETURN $
+    -DENABLE_TESTS_FOR_MODESELECT $
+    -DENABLE_TESTS_FOR_PARSER $
+    -DINCLUDE_HUBITAT_PARSE_OUTPUT $
+    -DNO_LOG_STYLING $
+
+# Feature switches for dev flavor.
+gpp_defs = $
+    -DENABLE_ATTRIBUTE_PASSIVE_CACHE $
+    -DENABLE_ATTRIBUTE_SCAN_AND_SAVE $
+    -DENABLE_BLACK_BOX $
+    -DENABLE_DEBUG_TRIGGER_SUPPORT $
+    -DENABLE_DISTCLEAN_SUPPORT $
+    -DEVENT_SEQUENCING=reorder $
+    -DSORT_SUBSCRIPTION_PATHS $
+
+# eof
