@@ -78,6 +78,3 @@ cd /d %STAGEDIR%
 
 %ZIP% a -tzip -up1q0r2x1y2z1w2 -spm %ARCHIVE% -i@bom.txt
 powershell -STA -File %BASE%clip_file_and_path.ps1 %ARCHIVE%
-goto :eof
-
-:distclean

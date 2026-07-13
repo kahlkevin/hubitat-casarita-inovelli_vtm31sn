@@ -1,0 +1,75 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+        "label": "Stage This File and Copy Contents to Clipboard",
+        "type": "shell",
+        "command": "cmd",
+        "args": [
+            "/c",
+            "\"${workspaceFolder}\\preprocess_and_clip.cmd\"",
+            "${fileBasename}"
+        ],
+        "group": {
+            "kind": "build",
+            "isDefault": true
+        },
+        "presentation": {
+            "reveal": "always",
+            "panel": "shared"
+        },
+        "problemMatcher": []
+    },
+    {
+        "label": "Stage This File and Copy Contents to Clipboard (prod mode)",
+        "type": "shell",
+        "command": "cmd",
+        "args": [
+            "/c",
+            "\"${workspaceFolder}\\preprocess_and_clip.cmd\"",
+            "prod",
+            "${fileBasename}"
+        ],
+        "group": "build",
+        "presentation": {
+            "reveal": "always",
+            "panel": "shared"
+        },
+        "problemMatcher": []
+    },
+    {
+        "label": "Build Bundle Package",
+        "type": "shell",
+        "command": "cmd",
+        "args": [
+            "/c",
+            "\"${workspaceFolder}\\make.cmd\""
+        ],
+        "group": "build",
+        "presentation": {
+            "reveal": "always",
+            "panel": "shared"
+        },
+        "problemMatcher": []
+    },
+    {
+        "label": "Stage Files",
+        "type": "shell",
+        "command": "wsl",
+        "args": [
+            "ninja",
+            "-f",
+            "build-dev.ninja"
+        ],
+        "options": {
+            "cwd": "${workspaceFolder}\\build\\ninja"
+        },
+        "group": "build",
+        "presentation": {
+            "reveal": "always",
+            "panel": "shared"
+        },
+        "problemMatcher": []
+    }
+]
+}
