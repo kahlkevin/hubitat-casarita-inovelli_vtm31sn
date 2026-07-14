@@ -4,10 +4,26 @@ This is a Hubitat driver bundle for Inovelli White Series Matter devices, center
 
 The project keeps source drivers, libraries, includes, and install/update assets separate, then uses [GPP](https://files.nothingisreal.com/software/gpp/gpp.html) and [Ninja](https://ninja-build.org/manual.html#_introduction) to generate Hubitat-ready Groovy files. Development builds are staged as modular driver/library files; pre-release and production builds are staged as monolithic driver files for easier installation and a minimal on-hub footprint.
 
+See [the Hubitat Community Thread](https://community.hubitat.com/t/release-inovelli-white-series-vtm31-sn-matter-community-driver/165102) for additional information.
+
 ## Supported Devices
 
 - Inovelli Dimmer White Series VTM31-SN
 - Inovelli notification bar child device created by the VTM31-SN driver (automatically)
+
+## Highlighted Features
+
+ - Full switch and dimmer control for the primary load
+ - Independent control of the built-in RGB notification bar through an automatically managed child device
+ - On/off, level, color, and color-temperature control for the notification bar
+ - Access to the device’s built-in notification and LED effects
+ - Button and multi-tap event support
+ - Power and energy monitoring
+ - Comprehensive access to the VTM31-SN’s Matter configuration settings
+ - Device preferences organized into functional groups so related settings are easy to find and configure together
+ - Automatic synchronization with the device’s existing settings and current state
+ - Fast, efficient initialization and recovery with automatically optimized Matter subscriptions
+ - Automatic driver selection and setup when commissioning a supported device to Hubitat
 
 ## Repository Layout
 
@@ -62,6 +78,9 @@ Successful package builds create ZIP files under `dist/`, using the generated `b
 - `prod` uses namespace `casarita` and stages monolithic driver files.
 
 The staged files are written under `build/out/<flavor>/`.
+
+Only the `prod` flavor provides fingerprints that will automatically associate the driver with a newly-commissioned device.
+This permits safe side-by-side installation of all flavors on a single hub without risk of confusion/cross-contamination during automatic driver installation.
 
 ## VS Code Helpers
 
