@@ -128,6 +128,20 @@ static void mh_intListSave(DeviceWrapper clientDevice, String dataValue, List<In
 static Long mh_safeParseLong(Object value) { try { value as Long } catch (NumberFormatException ignored) { null } }
 static Integer mh_safeParseInteger(Object value) { try { value as Integer } catch (NumberFormatException ignored) { null } }
 
+static int mh_prefInt(val) {
+    if (val instanceof Integer) return val
+    if (val == null || val == '' || val == '0') return 0
+    if (val == '1') return 1
+    if (val instanceof Boolean) return val ? 1 : 0
+    if (val instanceof Number) return val.intValue()
+
+    try {
+        return Integer.parseInt(val.toString())
+    } catch (ignored) {
+        return 0
+    }
+}
+
 static int clamp(int val, int min, int max) { Math.max(Math.min(val, max), min) }
 static BigDecimal clamp(BigDecimal val, BigDecimal min, BigDecimal max) { val.min(max).max(min) }
 

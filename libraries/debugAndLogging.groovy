@@ -33,6 +33,7 @@ library (
 
 // Dependencies:
 // @AT(INCLIB)(blackBox)
+// @AT(INCLIB)(matterHelpers)
 // #endif
 
 // #ifdef MODULAR_BUILD
@@ -300,22 +301,8 @@ static List<String> __dl_sharedTriggers(boolean isChild) {
 }
 // #endif
 
-static int __dl_prefInt(val) {
-    if (val instanceof Integer) return val
-    if (val == null || val == '' || val == '0') return 0
-    if (val == '1') return 1
-    if (val instanceof Boolean) return val ? 1 : 0
-    if (val instanceof Number) return val.intValue()
-
-    try {
-        return Integer.parseInt(val.toString())
-    } catch (ignored) {
-        return 0
-    }
-}
-
-int __dl_debugLogEnable() { __dl_prefInt(debugLogEnable) }
-int __dl_infoLogEnable() { __dl_prefInt(infoLogEnable) }
+int __dl_debugLogEnable() { mh_prefInt(debugLogEnable) }
+int __dl_infoLogEnable() { mh_prefInt(infoLogEnable) }
 
 @Field static final Map __dl_loggingOptions = [
     0:    "Off",

@@ -136,20 +136,20 @@ library (
         ],
         hintThese,
     ],
+// #ifdef ENABLE_POWER_REPORTING
     0x0090: [   // Electrical Power Measurement Cluster (Matter Application Cluster Specification R1.4 § 2.13), endpoint 7
         [       //  Matter Attributes
-        0x0004: [name: "voltage",               conversion: div1e3, unit: "V"],
-        0x0005: [name: "amperage",              conversion: div1e3, unit: "A"],
-        0x0008: [name: "power",                 conversion: div1e3, unit: "W", descriptionText: { "Load power is ${it.value} ${it.unit}" }],
+        0x0008: [name: EVT_POWER,               conversion: div1e3, unit: "W", descriptionText: { "Load power is ${it.value} ${it.unit}" }],
         ],
         hintThese,
     ],
     0x0091: [   // Electrical Energy Measurement Cluster (Matter Application Cluster Specification R1.4 § 2.12), endpoint 7
         [       //  Matter Attributes
-        0x0001: [name: "energy",                conversion: { div1e6(it.get(0, 0)) }, unit: "kWh", descriptionText: { "Cumulative energy used: ${it.value} ${it.unit}" }],
+        0x0001: [name: EVT_ENERGY,              conversion: { div1e6(it.get(0, 0)) }, unit: "kWh", descriptionText: { "Cumulative energy used: ${it.value} ${it.unit}" }],
         ],
         hintThese,
     ],
+// #endif
 // #ifdef FAN_SUPPORT
     0x0202: [   // Fan Control Cluster (Matter Application Cluster Specification R1.4 § 4.4)
         [       //  Matter Attributes
@@ -191,8 +191,8 @@ library (
 //  (a) Remove JSON_SUB once satisfied matter.subscribe() and friends can do everything we need (including IsUrgent = true event subs)
 //  (b) See https://community.hubitat.com/t/matter-event-subscriptions-expose-eventpathib-isurgent-for-low-latency-generic-switch-button-events/164389
 // #endif
-String hm_getSubscriptionEntitiesJson() {
-    List seStringConv = hm_getSubscriptionEntities()
+String hm_getSubscriptionEntitiesJson(Closure includeEntity = null) {
+    List seStringConv = hm_getSubscriptionEntities(includeEntity)
         ?.collect {
             it.collectEntries { entry -> [(entry.key): (entry.value instanceof String) ? entry.value : String.format('0x%1$X', entry.value)] }
         }
@@ -201,8 +201,8 @@ String hm_getSubscriptionEntitiesJson() {
 }
 // #endif
 
-List hm_getSubscriptionPaths() {
-    hm_getSubscriptionEntities()
+List hm_getSubscriptionPaths(Closure includeEntity = null) {
+    hm_getSubscriptionEntities(includeEntity)
         ?.collect {
             String ep = HexUtils.integerToHexString(it.ep & 0xFFFF, 2)
             if (it.evt) matter.eventPath(ep, it.cluster, it.evt)
@@ -210,7 +210,7 @@ List hm_getSubscriptionPaths() {
         }
 }
 
-List hm_getSubscriptionEntities() {
+List hm_getSubscriptionEntities(Closure includeEntity = null) {
     Closure processHint = { Integer clusterId, List entryList, int hintIndex, String entityType ->
         Map subscriptionHint = entryList[hintIndex]
         Map base = [ep: -1 as Short, cluster: clusterId]
@@ -235,13 +235,16 @@ List hm_getSubscriptionEntities() {
         }
     }
 
-    __hm_data().collectMany { Map.Entry cluster ->
+    List entities = __hm_data().collectMany { Map.Entry cluster ->
         Integer clusterId = cluster.key
         List entryList = cluster.value
         processHint(clusterId, entryList, 1, 'attr') + processHint(clusterId, entryList, 3, 'evt')
     }
+
+    if (includeEntity != null) entities = entities.findAll { includeEntity.call(it) }
+
 // #ifdef SORT_SUBSCRIPTION_PATHS
-    ?.sort { Map a, Map b ->
+    return entities.sort { Map a, Map b ->
         boolean aIsEvt = a.containsKey("evt")
         boolean bIsEvt = b.containsKey("evt")
         int compareResult
@@ -258,6 +261,8 @@ List hm_getSubscriptionEntities() {
         }
         return compareResult
     }
+// #else
+    return entities
 // #endif
 }
 

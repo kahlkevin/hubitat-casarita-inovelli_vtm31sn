@@ -31,6 +31,9 @@
 #endif
 @library(matterHelpers)
 @library(matterMsgMake)
+#ifdef ENABLE_POWER_REPORTING
+@library(powerReporting)
+#endif
 @library(tlvParser)
 @driver(DimmerVTM31-SN)
 @driver(NotificationBarRGBW)

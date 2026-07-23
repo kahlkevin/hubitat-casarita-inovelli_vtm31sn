@@ -61,7 +61,7 @@ void c06_setOnStartup(Integer ep, String value) {
     if (__c06_startupModes.containsKey(value)) {
         c06_setOnStartup(ep, __c06_startupModes[value])
     } else {
-        error "Unrecognized mode!"
+        error "${dl_currentMethod()}: Unrecognized mode!"
     }
 }
 

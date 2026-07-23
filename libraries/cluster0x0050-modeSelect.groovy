@@ -404,7 +404,7 @@ void __ms_ensureSpec(String sHint = null, Object iHint = null) {
 void __ms_softwareVersion_updated(Map hubEvent) { __ms_ensureSpec(hubEvent.value) }
 void __ms_softwareVersionId_updated(Map hubEvent) { __ms_ensureSpec(null, hubEvent.value) }
 
-void __ms_currentMode_updated(Map hubEvent) {
+def __ms_currentMode_updated(Map hubEvent) {
     __ms_ensureSpec()
 
     // Nothing to do unless there's an active optionSpec set
@@ -422,8 +422,10 @@ void __ms_currentMode_updated(Map hubEvent) {
 
     List<Object> devices = getChildDevices().plus(device).findAll { mh_intListLoad(it, __ms_dv_pc_endPoints)?.contains(optionSpec.partOf) || mh_intListLoad(it, __ms_dv_ac_endPoints)?.contains(optionSpec.partOf) }
 
+    def oldValue
+    
     if (devices == null) {
-        deviceState.modeValueCache.put(ep, newMode)
+        oldValue = deviceState.modeValueCache.put(ep, newMode)
     } else {
         Closure update = (optionSpec.isAttribute) ? {
             // Invoke device driver's modeChanged method
@@ -436,8 +438,10 @@ void __ms_currentMode_updated(Map hubEvent) {
         }
 
         // Atomically update both the value cache and the attribute or setting
-        deviceState.modeValueCache.compute(ep, { key, oldVal -> devices.each(update); newMode })
+        deviceState.modeValueCache.compute(ep, { key, oldVal -> devices.each(update); oldValue = oldVal; newMode })
     }
+
+    return oldValue
 }
 
 List<Map> __ms_getModes(String setting) {

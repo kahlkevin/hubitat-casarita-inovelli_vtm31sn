@@ -43,6 +43,7 @@ library (
     CUSTOM: 3,
 ]
 
+@Field static final Object hr_unhandled = new Object()
 @Field static final String DV_HE_ENDPOINTS = "hubEventEndpoints"
 
 static void hr_hubEventClientInstalled(DeviceWrapper hubEventDevice, int endPoint) { mh_intListSave(hubEventDevice, DV_HE_ENDPOINTS, [endPoint]) }
@@ -62,7 +63,10 @@ void hr_retireHubEvent(Map ev, Map<String, Closure<Map>> handlers = null) {
         handlers?.onFilter?.call(ev)
         switch (ev.storageType ?: hr_storageType.CAPABILITYATTRIBUTE) {
             case hr_storageType.CUSTOM:
-                handlers?.onCustom?.call(ev)
+                Closure handler = handlers?.onCustom
+                def oldValue = handler?.call(ev)
+                if (!handler || oldValue.is(hr_unhandled)) return
+                unchanged = oldValue == ev.value
                 break
 
             case hr_storageType.DATAVALUE:
@@ -87,12 +91,19 @@ void hr_retireHubEvent(Map ev, Map<String, Closure<Map>> handlers = null) {
                 return
         }
 
+// #define L_FMT (#1.descriptionText ?: "${#1.name} set to ${#1.value}")
+// #ifdef ENABLE_LOG_UNCHANGED
         info(ev) {
             def sb = new StringBuilder()
-            sb << ((it.descriptionText) ? (it.descriptionText) : ("${it.name} set to ${it.value}") )
+            sb << @L_FMT(it)
             if (unchanged) sb << " (unchanged)"
             return sb
         }
+// #else
+        if (unchanged) return
+        info @L_FMT(ev)
+// #endif
+// #undef L_FMT
     } catch (AssertionError | Exception e) {
         error e
     }

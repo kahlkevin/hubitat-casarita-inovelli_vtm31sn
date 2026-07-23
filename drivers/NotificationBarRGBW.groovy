@@ -100,9 +100,12 @@ void retireHubEvent(Map hubEvent) {
     hr_retireHubEvent(hubEvent, [
         onCustom: {
             if (it.name == EVT_C08OPTIONS) {
+                def oldValue = state[EVT_C08OPTIONS]
                 state[EVT_C08OPTIONS] = it.value
                 device.updateSetting(PREF_CCTLEVEL, [type: "bool", value: "${!!(it.value & C08_OPTBIT_CCTTOLEVEL)}"])
+                return oldValue
             }
+            return hr_unhandled
         },
         onFilter: { if (it.colorControl) runInMillis(100, @NAMEOF(updateColorControlAttributes)) },
     ])
@@ -309,7 +312,7 @@ Map __getModeConstraints(String option) { parent?.getApi()?.modeSelect?.getModes
 void modeSpecActivated() {
     try {
         Map lightEffects = __getModeConstraints(OPT_LEDEFFECT)
-        if (lightEffects) retireHubEvent([name: ATTR_LIGHTEFFECTS, value: new JsonBuilder(lightEffects)])
+        if (lightEffects) retireHubEvent([name: ATTR_LIGHTEFFECTS, value: new JsonBuilder(lightEffects).toString()])
     } catch (AssertionError | Exception e) {
         error e
     }

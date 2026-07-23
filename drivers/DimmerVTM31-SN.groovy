@@ -41,6 +41,13 @@
 // #ifdef ENABLE_TESTS_FOR_MODESELECT
 @Field static final String DBG_TESTMODESELECT = "test: run modeSelect tests"
 // #endif
+// #ifdef ENABLE_DEBUG_POWER_REPORTING
+@Field static final String DBG_DUMPPRSTATE = "dump: powerReporting state"
+@Field static final String DBG_CLEARPRSTATE = "kill: powerReporting state"
+// #endif
+// #ifdef ENABLE_TESTS_FOR_POWER_REPORTING
+@Field static final String DBG_TESTPOWERREPORTING = "test: run powerReporting tests"
+// #endif
 // #ifdef ENABLE_TESTS_FOR_PARSER
 @Field static final String DBG_TESTPARSER = "test: run tlv parser tests"
 // #endif
@@ -51,16 +58,21 @@
 // #endif
 @Field static final String DBG_UNSUBSCRIBE = "call: unsubscribe()"
 // #if @defined(L_NAIVE_HIGH_WATER)
-// #error Don't define L_xxxx macros outside of individual source files
+//  #error Don't define L_xxxx macros outside of individual source files
 // #endif
 // #if @EVENT_SEQUENCING != none && @EVENT_SEQUENCING != legacy && @EVENT_SEQUENCING != reorder && @EVENT_SEQUENCING != urgent
-// #error EVENT_SEQUENCING must be set to none|legacy|reorder|urgent
+//  #error EVENT_SEQUENCING must be set to none|legacy|reorder|urgent
 // #endif
 // #ifeq @EVENT_SEQUENCING urgent
-// #error 'EVENT_SEQUENCING=urgent' mode is not yet supported
+//  #error 'EVENT_SEQUENCING=urgent' mode is not yet supported
 // #endif
 // #if @EVENT_SEQUENCING == legacy
-// #define L_NAIVE_HIGH_WATER
+//  #define L_NAIVE_HIGH_WATER
+// #endif
+// #ifdef ENABLE_POWER_REPORTING
+//  #define L_PRSUBFILTER this.&pr_includeSubscriptionEntity
+// #else
+//  #define L_PRSUBFILTER
 // #endif
 // #ifdef ENABLE_ATTRIBUTE_SCAN_AND_SAVE
 
@@ -76,10 +88,12 @@ metadata {
         version: "@VERSION"
     ) {
         capability "Configuration"
-        capability "EnergyMeter"
         capability "Initialize"
-        capability "PowerMeter"
         capability "Refresh"
+// #ifdef ENABLE_POWER_REPORTING
+        capability "EnergyMeter"
+        capability "PowerMeter"
+// #endif
 
         attribute EVT_IDTIME, "number"
         attribute EVT_IDTYPE, "string"
@@ -116,6 +130,13 @@ metadata {
 //  #ifdef ENABLE_TESTS_FOR_MODESELECT
                 DBG_TESTMODESELECT,
 //  #endif
+//  #ifdef ENABLE_DEBUG_POWER_REPORTING
+                DBG_DUMPPRSTATE,
+                DBG_CLEARPRSTATE,
+//  #endif
+//  #ifdef ENABLE_TESTS_FOR_POWER_REPORTING
+                DBG_TESTPOWERREPORTING,
+//  #endif
 //  #ifdef ENABLE_TESTS_FOR_PARSER
                 DBG_TESTPARSER,
 //  #endif
@@ -135,6 +156,9 @@ metadata {
         debug "metadata.preferences - (re)generate preferences inputs"
 // #endif
         __prefs_api.apply(this, [
+// #ifdef ENABLE_POWER_REPORTING
+            pr_genPrefs(),
+// #endif
 // #ifdef ENABLE_BLACK_BOX
             bb_genPrefs(),
 // #endif
@@ -150,6 +174,8 @@ metadata {
     isSubComplete: this.&__isSubComplete,
     setSubCompleteLocked: this.&__setSubComplete,
     dispatchMsg: this.&__dispatchMsg,
+    refresh: this.&refresh,
+    resubscribe: { initialize(true) },
 ].asImmutable()
 
 @Field final Map __prefs_api = [
@@ -166,14 +192,15 @@ Map getApi() {
 
 @Field final Closure __fire = { Map hubEvent ->
     Map<String, Closure> listeners = ms_api.listeners
+    Closure listener = listeners[hubEvent.name]
 // #ifdef ENABLE_DEBUG_DISPATCH
     ifDebug {
-        boolean hasListener = listeners[hubEvent.name] != null
+        boolean hasListener = listener != null
         String msg = "__fire(\"${hubEvent.name}\"), hasListener = ${hasListener}"
         if (hasListener) debug msg; else warn msg
     }
 // #endif
-    listeners[hubEvent.name]?.call(hubEvent)
+    return (listener != null) ? listener.call(hubEvent) : hr_unhandled
 }
 
 void retireHubEvent(Map hubEvent) {
@@ -214,6 +241,9 @@ void parse(String description) {
             case mm_matterMsgType.ATTR_REPORT:
 // #ifdef ENABLE_ATTRIBUTE_PASSIVE_CACHE
                 ds_put(matterMsg.endpointInt, matterMsg.clusterInt, matterMsg.attrInt, matterMsg.decodedValue)
+// #endif
+// #ifdef ENABLE_POWER_REPORTING
+                if (pr_consumeReport(matterMsg)) break
 // #endif
                 __dispatchMsg(matterMsg)
                 break
@@ -345,6 +375,9 @@ void updated() {
 // #ifdef ENABLE_BLACK_BOX
         bb_updated()
 // #endif
+// #ifdef ENABLE_POWER_REPORTING
+        pr_updated()
+// #endif
         getApi().modeSelect.updated(device)
         c06_updated()
         c08_updated()
@@ -362,6 +395,9 @@ void refresh(boolean subAlreadyPending = false) {
     debug "${dl_currentMethod()}(${subAlreadyPending}) - re-sync state from physical device"
     try {
 // #endif
+// #ifdef ENABLE_POWER_REPORTING
+    pr_refreshStarting()
+// #endif
     List<Map> attrs = hm_getRefreshPaths()
     String cmd = matter.readAttributes(attrs)
 
@@ -369,7 +405,7 @@ void refresh(boolean subAlreadyPending = false) {
 
     if (subAlreadyPending) return
 
-    attrs = hm_getSubscriptionPaths().findAll { it.attr }   // Only attributes, no events
+    attrs = hm_getSubscriptionPaths(@L_PRSUBFILTER).findAll { it.attr }   // Only attributes, no events
     cmd = matter.readAttributes(attrs)
 
     sendMatterCommand(cmd)
@@ -395,14 +431,15 @@ void __subscribe(boolean subscribeToEverything = false) {
     refresh(true)
 
     if (subscribeToEverything) {
+        // Full attribute scans intentionally bypass preference-based subscription filtering.
         cmd = matter.cleanSubscribe(0, 600, [matter.attributePath("FFFF", -1, -1)])
     } else {
         List subIntervals = [@SUBSCRIPTION_MIN_INTERVAL, @SUBSCRIPTION_MAX_INTERVAL]
 // #ifdef JSON_SUB
-        String subEntities = hm_getSubscriptionEntitiesJson()
+        String subEntities = hm_getSubscriptionEntitiesJson(@L_PRSUBFILTER)
         if (subEntities) cmd = String.format('he cleanSubscribe 0x%1$02X 0x%2$04X ', *subIntervals) + subEntities
 // #else
-        List subPaths = hm_getSubscriptionPaths()
+        List subPaths = hm_getSubscriptionPaths(@L_PRSUBFILTER)
         if (subPaths) cmd = matter.cleanSubscribe(*subIntervals, subPaths)
 // #endif
     }
@@ -483,6 +520,27 @@ void debugTrigger(arg, markerText = null) {
             case DBG_TESTMODESELECT:
                 try {
                     ms_runAllTests()
+                } catch (AssertionError | Exception e) {
+                    error e
+                }
+                break
+//  #endif
+//  #ifdef ENABLE_DEBUG_POWER_REPORTING
+
+            case DBG_DUMPPRSTATE:
+                debug pr_stateString()
+                break
+
+            case DBG_CLEARPRSTATE:
+                pr_clearState()
+                debug "powerReporting state reset to startup/default"
+                break
+//  #endif
+//  #ifdef ENABLE_TESTS_FOR_POWER_REPORTING
+
+            case DBG_TESTPOWERREPORTING:
+                try {
+                    pr_runAllTests()
                 } catch (AssertionError | Exception e) {
                     error e
                 }
@@ -620,6 +678,7 @@ void __applyPrefs(Object prefDriver, List<List<Map>> unsortedPrefs, boolean incl
 // #endif
 @INCLIB(hubEventRetire)
 @INCLIB(hubEventMake)
-@INCLIB(cluster0x0050-modeSelect)
 @INCLIB(matterMsgMake)
+@INCLIB(cluster0x0050-modeSelect)
+@INCLIB(powerReporting)
 @INCLIB(tlvParser)

@@ -6,6 +6,8 @@ The project keeps source drivers, libraries, includes, and install/update assets
 
 See [the Hubitat Community Thread](https://community.hubitat.com/t/release-inovelli-white-series-vtm31-sn-matter-community-driver/165102) for additional information.
 
+See [CHANGELOG.md](CHANGELOG.md) for release notes and upgrade details.
+
 ## Supported Devices
 
 - Inovelli Dimmer White Series VTM31-SN
@@ -18,7 +20,7 @@ See [the Hubitat Community Thread](https://community.hubitat.com/t/release-inove
  - On/off, level, color, and color-temperature control for the notification bar
  - Access to the device’s built-in notification and LED effects
  - Button and multi-tap event support
- - Power and energy monitoring
+ - Configurable power and energy monitoring
  - Comprehensive access to the VTM31-SN’s Matter configuration settings
  - Device preferences organized into functional groups so related settings are easy to find and configure together
  - Automatic synchronization with the device’s existing settings and current state
